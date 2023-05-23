@@ -4,6 +4,7 @@ from torch import optim
 
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 # ============================
 # Model
@@ -95,10 +96,15 @@ def get_optimiazer(model, learning_rate=0.001):
 def trainer(train_loader, model, optimizer, loss_fn, num_epochs, device, save_path: str):
     if not save_path.endswith('pth'):
         raise Exception('Invalid save path')
+    
+    best_loss = 1
     for epoch in range(num_epochs):
         total_loss = 0
-        best_loss = 1
-        for i, (inputs, labels) in enumerate(train_loader):
+
+        loop = tqdm(enumerate(train_loader), ncols=100, total=len(train_loader))
+        loop.set_description(f'Epoch [{epoch+1}/{num_epochs}]')
+
+        for i, (inputs, labels) in loop:
             inputs = inputs.to(device)
             labels = labels.to(device)
 
@@ -113,11 +119,10 @@ def trainer(train_loader, model, optimizer, loss_fn, num_epochs, device, save_pa
             
             total_loss += loss.item()
 
-            # 打印损失值
-            if (epoch+1)%5==0 and (i+1)%5==0:
-                print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i+1}/{len(train_loader)}], Dice coefficient: {1-loss.item():.6f}, Dice Loss: {loss.item():.6f}')
+            loop.set_postfix_str(f'loss={loss.item():.6f}')
                 
         total_loss /= len(train_loader)
         if total_loss < best_loss:
             best_loss = total_loss
-            torch.save(model, save_path)
+            torch.save(model.state_dict(), save_path)
+            print(f'Save checkpoint in Epoch[{epoch+1}/{num_epochs}].')
