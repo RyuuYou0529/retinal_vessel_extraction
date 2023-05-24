@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 from torch import optim
 
-import numpy as np
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 # ============================
